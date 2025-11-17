@@ -1,0 +1,11 @@
+numpy
+pandas
+requests
+pymysql
+beautifulsoup4
+lxml
+html5lib
+schedule
+pytz
+thefuzz
+SPARQLWrapper
