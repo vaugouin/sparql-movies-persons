@@ -67,7 +67,7 @@ def f_sparqlpersonscrawl(strwikidataidquery,lngyearquery=0):
                     # Compute strwikidataid
                     strwikidataid = ""
                     strwikidataid = stritem.split('/')[-1]
-                    cp.f_setservervariable("strsparqlcrawlerpersonscurrentvalue",strwikidataid,"Current value in the current Wikidata SPARQL crawler for movies and persons",0)
+                    cp.f_setservervariable("strsparqlaltcrawlerpersonscurrentvalue",strwikidataid,"Current value in the current Wikidata SPARQL alternative crawler",0)
                     # Compute strname
                     strname = ""
                     if 'itemLabel.value' in row:
@@ -223,7 +223,7 @@ def f_sparqlmoviescrawl(strwikidataidquery,lngyearquery=0):
                     # Compute strwikidataid
                     strwikidataid = ""
                     strwikidataid = stritem.split('/')[-1]
-                    cp.f_setservervariable("strsparqlcrawlermoviescurrentvalue",strwikidataid,"Current value in the current Wikidata SPARQL crawler for movies and persons",0)
+                    cp.f_setservervariable("strsparqlaltcrawlermoviescurrentvalue",strwikidataid,"Current value in the current Wikidata SPARQL alternative crawler",0)
                     if strwikidataid != strwikidataidprev:
                         # We process a new movie
                         print("Processing a new movie")
@@ -489,7 +489,7 @@ def f_sparqlseriescrawl(strwikidataidquery,lngyearquery=0):
                     # Compute strwikidataid
                     strwikidataid = ""
                     strwikidataid = stritem.split('/')[-1]
-                    cp.f_setservervariable("strsparqlcrawlerseriescurrentvalue",strwikidataid,"Current value in the current Wikidata SPARQL crawler for movies and persons",0)
+                    cp.f_setservervariable("strsparqlaltcrawlerseriescurrentvalue",strwikidataid,"Current value in the current Wikidata SPARQL alternative crawler",0)
                     if strwikidataid != strwikidataidprev:
                         # We process a new serie
                         print("Processing a new serie")
@@ -710,11 +710,11 @@ def f_sparqlseriescrawl(strwikidataidquery,lngyearquery=0):
             print(f"Rate limit exceeded. Retrying after {lngretryafter} seconds.")
             time.sleep(lngretryafter)
 
-strprocessesexecutedprevious = cp.f_getservervariable("strsparqlcrawlermoviespersonsprocessesexecuted",0)
-strprocessesexecuteddesc = "List of processes executed in the Wikidata SPARQL crawler for movies and persons"
-cp.f_setservervariable("strsparqlcrawlermoviespersonsprocessesexecutedprevious",strprocessesexecutedprevious,strprocessesexecuteddesc + " (previous execution)",0)
+strprocessesexecutedprevious = cp.f_getservervariable("strsparqlaltcrawlermoviespersonsprocessesexecuted",0)
+strprocessesexecuteddesc = "List of processes executed in the Wikidata SPARQL alternative crawler"
+cp.f_setservervariable("strsparqlaltcrawlerprocessesexecutedprevious",strprocessesexecutedprevious,strprocessesexecuteddesc + " (previous execution)",0)
 strprocessesexecuted = ""
-cp.f_setservervariable("strsparqlcrawlermoviespersonsprocessesexecuted",strprocessesexecuted,strprocessesexecuteddesc,0)
+cp.f_setservervariable("strsparqlaltcrawlerprocessesexecuted",strprocessesexecuted,strprocessesexecuteddesc,0)
 
 try:
     with cp.connectioncp:
@@ -723,12 +723,12 @@ try:
             # Start timing the script execution
             start_time = time.time()
             strnow = datetime.now(cp.paris_tz).strftime("%Y-%m-%d %H:%M:%S")
-            cp.f_setservervariable("strsparqlcrawlermoviespersonsstartdatetime",strnow,"Date and time of the last start of the Wikidata SPARQL crawler for movies and persons",0)
+            cp.f_setservervariable("strsparqlaltcrawlerstartdatetime",strnow,"Date and time of the last start of the Wikidata SPARQL alternative crawler",0)
             strtotalruntimedesc = "Total runtime of the Wikidata SPARQL crawler for movies, series and persons"
-            strtotalruntimeprevious = cp.f_getservervariable("strsparqlcrawlermoviespersonstotalruntime",0)
-            cp.f_setservervariable("strsparqlcrawlermoviespersonstotalruntimeprevious",strtotalruntimeprevious,strtotalruntimedesc + " (previous execution)",0)
+            strtotalruntimeprevious = cp.f_getservervariable("strsparqlaltcrawlermoviespersonstotalruntime",0)
+            cp.f_setservervariable("strsparqlaltcrawlertotalruntimeprevious",strtotalruntimeprevious,strtotalruntimedesc + " (previous execution)",0)
             strtotalruntime = ""
-            cp.f_setservervariable("strsparqlcrawlermoviespersonstotalruntime",strtotalruntime,strtotalruntimedesc,0)
+            cp.f_setservervariable("strsparqlaltcrawlertotalruntime",strtotalruntime,strtotalruntimedesc,0)
             # Request Homer
             #f_sparqlpersonscrawl("Q6691",0)
             #arrwikidatascope = {101: 'movie', 102: 'person'}
@@ -739,7 +739,7 @@ try:
             for intindex,strcontent in arrwikidatascope.items():
                 strcurrentprocess = f"{intindex}: processing Wikidata " + strcontent + " data using SPARQL"
                 strprocessesexecuted += str(intindex) + ", "
-                cp.f_setservervariable("strsparqlcrawlermoviespersonsprocessesexecuted",strprocessesexecuted,strprocessesexecuteddesc,0)
+                cp.f_setservervariable("strsparqlaltcrawlerprocessesexecuted",strprocessesexecuted,strprocessesexecuteddesc,0)
                 print(strcurrentprocess)
                 if intindex == 101:
                     # Films data download
@@ -751,8 +751,8 @@ try:
                     lngyearquery = lngyearbegin
                     intencore = True
                     while intencore:
-                        cp.f_setservervariable("strsparqlcrawlermoviescurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL crawler for movies and persons",0)
-                        cp.f_setservervariable("strsparqlcrawlermoviescurrentvalue",str(lngyearquery),"Current year in the Wikidata SPARQL crawler for movies and persons, movie process",0)
+                        cp.f_setservervariable("strsparqlaltcrawlermoviescurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL alternative crawler",0)
+                        cp.f_setservervariable("strsparqlaltcrawlermoviescurrentvalue",str(lngyearquery),"Current year in the Wikidata SPARQL alternative crawler, movie process",0)
                         time.sleep(90)
                         # Retrieve all movies for a given year
                         print("lngyearquery = " + str(lngyearquery))
@@ -769,8 +769,8 @@ try:
                     lngyearquery = lngyearbegin
                     intencore = True
                     while intencore:
-                        cp.f_setservervariable("strsparqlcrawlerpersonscurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL crawler for movies and persons",0)
-                        cp.f_setservervariable("strsparqlcrawlerpersonscurrentvalue",str(lngyearquery),"Current year in the Wikidata SPARQL crawler for movies and persons, person process",0)
+                        cp.f_setservervariable("strsparqlaltcrawlerpersonscurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL alternative crawler",0)
+                        cp.f_setservervariable("strsparqlaltcrawlerpersonscurrentvalue",str(lngyearquery),"Current year in the Wikidata SPARQL alternative crawler, person process",0)
                         time.sleep(5)
                         # Retrieve all persons for a given year
                         print("lngyearquery = " + str(lngyearquery))
@@ -798,8 +798,8 @@ try:
                         results = cursor3.fetchall()
                         for row3 in results:
                             strwikidataid = row3['ID_WIKIDATA']
-                            cp.f_setservervariable("strsparqlcrawleritemstopersonscurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL crawler for movies and persons",0)
-                            cp.f_setservervariable("strsparqlcrawleritemstopersonscurrentvalue",strwikidataid,"Current Wikidata id in the Wikidata SPARQL crawler for movies and persons, person process",0)
+                            cp.f_setservervariable("strsparqlaltcrawleritemstopersonscurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL alternative crawler",0)
+                            cp.f_setservervariable("strsparqlaltcrawleritemstopersonscurrentvalue",strwikidataid,"Current Wikidata id in the Wikidata SPARQL alternative crawler, person process",0)
                             time.sleep(2)
                             # Retrieve the person for the given wikidata id 
                             print("strwikidataid = " + strwikidataid)
@@ -823,8 +823,8 @@ try:
                         results = cursor3.fetchall()
                         for row3 in results:
                             strwikidataid = row3['ID_WIKIDATA']
-                            cp.f_setservervariable("strsparqlcrawleritemstomoviescurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL crawler for movies and persons",0)
-                            cp.f_setservervariable("strsparqlcrawleritemstomoviescurrentvalue",strwikidataid,"Current Wikidata id in the Wikidata SPARQL crawler for movies and persons, movie process",0)
+                            cp.f_setservervariable("strsparqlaltcrawleritemstomoviescurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL alternative crawler",0)
+                            cp.f_setservervariable("strsparqlaltcrawleritemstomoviescurrentvalue",strwikidataid,"Current Wikidata id in the Wikidata SPARQL alternative crawler, movie process",0)
                             time.sleep(2)
                             # Retrieve the person for the given wikidata id 
                             print("strwikidataid = " + strwikidataid)
@@ -839,8 +839,8 @@ try:
                     lngyearquery = lngyearbegin
                     intencore = True
                     while intencore:
-                        cp.f_setservervariable("strsparqlcrawlerseriescurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL crawler for movies and persons",0)
-                        cp.f_setservervariable("strsparqlcrawlerseriescurrentvalue",str(lngyearquery),"Current year in the Wikidata SPARQL crawler for movies and persons, serie process",0)
+                        cp.f_setservervariable("strsparqlaltcrawlerseriescurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL alternative crawler",0)
+                        cp.f_setservervariable("strsparqlaltcrawlerseriescurrentvalue",str(lngyearquery),"Current year in the Wikidata SPARQL alternative crawler, serie process",0)
                         time.sleep(90)
                         # Retrieve all series for a given year
                         print("lngyearquery = " + str(lngyearquery))
@@ -850,15 +850,15 @@ try:
                         else:
                             lngyearquery += lngoffset
             strcurrentprocess = ""
-            cp.f_setservervariable("strsparqlcrawlermoviespersonscurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL crawler",0)
+            cp.f_setservervariable("strsparqlaltcrawlercurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL crawler",0)
             strnow = datetime.now(cp.paris_tz).strftime("%Y-%m-%d %H:%M:%S")
-            cp.f_setservervariable("strsparqlcrawlermoviespersonsenddatetime",strnow,"Date and time of the last end of the Wikidata SPARQL crawler for movies and persons",0)
+            cp.f_setservervariable("strsparqlaltcrawlerenddatetime",strnow,"Date and time of the last end of the Wikidata SPARQL alternative crawler",0)
             # Calculate total runtime and convert to readable format
             end_time = time.time()
             strtotalruntime = int(end_time - start_time)  # Total runtime in seconds
-            cp.f_setservervariable("strsparqlcrawlermoviespersonstotalruntimesecond",str(strtotalruntime),strtotalruntimedesc,0)
+            cp.f_setservervariable("strsparqlaltcrawlertotalruntimesecond",str(strtotalruntime),strtotalruntimedesc,0)
             readable_duration = cp.convert_seconds_to_duration(strtotalruntime)
-            cp.f_setservervariable("strsparqlcrawlermoviespersonstotalruntime",readable_duration,strtotalruntimedesc,0)
+            cp.f_setservervariable("strsparqlaltcrawlertotalruntime",readable_duration,strtotalruntimedesc,0)
             print(f"Total runtime: {strtotalruntime} seconds ({readable_duration})")
     
     print("Process completed")

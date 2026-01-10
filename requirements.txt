@@ -9,3 +9,4 @@ schedule
 pytz
 thefuzz
 SPARQLWrapper
+python-dotenv>=1.0.0
