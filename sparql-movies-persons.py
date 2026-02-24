@@ -8,6 +8,7 @@ import citizenphil as cp
 from datetime import datetime
 import csv
 import pandas as pd
+import re
 from SPARQLWrapper import SPARQLWrapper, SPARQLExceptions, JSON
 
 # Load .env file 
@@ -74,6 +75,9 @@ def f_sparqlpersonscrawl(strwikidataidquery,lngyearquery=0):
                         if row['itemLabel.value']:
                             if not pd.isna(row['itemLabel.value']):
                                 strname = row['itemLabel.value']
+                                # reject any name that looks like a Wikidata ID
+                                if re.match(r'^[QPL]\d+$', strname):
+                                    strname = ""
                     # Compute strimdbid
                     strimdbid = ""
                     if 'imdbID.value' in row:
@@ -254,6 +258,9 @@ def f_sparqlmoviescrawl(strwikidataidquery,lngyearquery=0):
                         if row['itemLabel.value']:
                             if not pd.isna(row['itemLabel.value']):
                                 strtitle = row['itemLabel.value']
+                                # reject any title that looks like a Wikidata ID
+                                if re.match(r'^[QPL]\d+$', strtitle):
+                                    strtitle = ""
                     # Compute strimdbid
                     strimdbid = ""
                     if 'imdbID.value' in row:
@@ -520,6 +527,9 @@ def f_sparqlseriescrawl(strwikidataidquery,lngyearquery=0):
                         if row['itemLabel.value']:
                             if not pd.isna(row['itemLabel.value']):
                                 strtitle = row['itemLabel.value']
+                                # reject any title that looks like a Wikidata ID
+                                if re.match(r'^[QPL]\d+$', strtitle):
+                                    strtitle = ""
                     # Compute strimdbid
                     strimdbid = ""
                     if 'imdbID.value' in row:
@@ -732,10 +742,11 @@ try:
             # Request Homer
             #f_sparqlpersonscrawl("Q6691",0)
             #arrwikidatascope = {101: 'movie', 102: 'person'}
-            arrwikidatascope = {103: 'item to person', 104: 'item to movies', 102: 'person', 101: 'movie', 105: 'serie'}
-            #arrwikidatascope = {104: 'item to movies'}
+            arrwikidatascope = {103: 'item to person', 104: 'item to movie', 106: 'item to serie', 102: 'person', 101: 'movie', 105: 'serie'}
+            #arrwikidatascope = {104: 'item to movie'}
             #arrwikidatascope = {103: 'item to person'}
             #arrwikidatascope = {105: 'serie'}
+            arrwikidatascope = {106: 'item to serie'}
             for intindex,strcontent in arrwikidatascope.items():
                 strcurrentprocess = f"{intindex}: processing Wikidata " + strcontent + " data using SPARQL"
                 strprocessesexecuted += str(intindex) + ", "
@@ -829,7 +840,32 @@ try:
                             # Retrieve the person for the given wikidata id 
                             print("strwikidataid = " + strwikidataid)
                             f_sparqlmoviescrawl(strwikidataid,0)
-                if intindex == 105:
+                elif intindex == 106:
+                    # Items to series data download
+                    strsql = ""
+                    strsql += "SELECT DISTINCT ID_WIKIDATA "
+                    strsql += "FROM T_WC_WIKIDATA_ITEM "
+                    strsql += "WHERE INSTANCE_OF IN ('Q5398426', 'Q1259759', 'Q117467246', 'Q63952888', 'Q15416') "
+                    strsql += "AND ID_WIKIDATA NOT IN ( "
+                    strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_SERIE "
+                    strsql += ") "
+                    strsql += "ORDER BY ID_WIKIDATA "
+                    # strsql += "LIMIT 1 "
+                    if strsql != "":
+                        print(strsql)
+                        cursor3.execute(strsql)
+                        lngrowcount = cursor3.rowcount
+                        print(f"{lngrowcount} lines")
+                        results = cursor3.fetchall()
+                        for row3 in results:
+                            strwikidataid = row3['ID_WIKIDATA']
+                            cp.f_setservervariable("strsparqlaltcrawleritemstoseriescurrentprocess",strcurrentprocess,"Current process in the Wikidata SPARQL alternative crawler",0)
+                            cp.f_setservervariable("strsparqlaltcrawleritemstoseriescurrentvalue",strwikidataid,"Current Wikidata id in the Wikidata SPARQL alternative crawler, series process",0)
+                            time.sleep(2)
+                            # Retrieve the person for the given wikidata id 
+                            print("strwikidataid = " + strwikidataid)
+                            f_sparqlseriescrawl(strwikidataid,0)
+                elif intindex == 105:
                     # Series data download
                     lngoffset = -1
                     lngyearbegin = datetime.now().year + 4
