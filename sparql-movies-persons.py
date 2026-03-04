@@ -19,6 +19,7 @@ print("strwikidatauseragent",strwikidatauseragent)
 
 def f_sparqlpersonscrawl(strwikidataidquery,lngyearquery=0):
     global strwikidatauseragent
+    global strsparqlpersoninstanceof
     
     intencore = True
     while intencore:
@@ -33,7 +34,12 @@ def f_sparqlpersonscrawl(strwikidataidquery,lngyearquery=0):
             strsparqlquery += "OPTIONAL { ?item wdt:P569 ?birthDate. } "
             strsparqlquery += "OPTIONAL { ?item wdt:P570 ?deathDate. } "
         else:
-            strsparqlquery += "?item wdt:P31 wd:Q5; "
+            arrpersoninstanceof = [s.strip() for s in strsparqlpersoninstanceof.split() if s.strip()]
+            strpersoninstanceofwd = " ".join([f"wd:{s}" for s in arrpersoninstanceof])
+            if strpersoninstanceofwd == "":
+                strpersoninstanceofwd = "wd:Q5"
+            strsparqlquery += "VALUES ?instanceOf { " + strpersoninstanceofwd + " } "
+            strsparqlquery += "?item wdt:P31 ?instanceOf; "
             strsparqlquery += "wdt:P345 ?imdbID; "
             strsparqlquery += "wdt:P569 ?birthDate. "
             strsparqlquery += "?item wdt:P31 ?instanceOf. "
@@ -167,6 +173,7 @@ def f_sparqlpersonscrawl(strwikidataidquery,lngyearquery=0):
 
 def f_sparqlmoviescrawl(strwikidataidquery,lngyearquery=0):
     global strwikidatauseragent
+    global strsparqlmovieinstanceof
     
     strwikidataidprev = ""
     intencore = True
@@ -187,7 +194,11 @@ def f_sparqlmoviescrawl(strwikidataidquery,lngyearquery=0):
             strsparqlquery += "OPTIONAL { ?item wdt:P462 ?color. } "
             strsparqlquery += "?item wdt:P577 ?pubdate. "
         else:
-            strsparqlquery += "VALUES ?type { wd:Q11424 wd:Q202866 wd:Q226730 wd:Q24862 wd:Q20650540 wd:Q506240 wd:Q17517379 } "
+            arrmovieinstanceof = [s.strip() for s in strsparqlmovieinstanceof.split() if s.strip()]
+            strmovieinstanceofwd = " ".join([f"wd:{s}" for s in arrmovieinstanceof])
+            if strmovieinstanceofwd == "":
+                strmovieinstanceofwd = "wd:Q11424"
+            strsparqlquery += "VALUES ?type { " + strmovieinstanceofwd + " } "
             strsparqlquery += "?item wdt:P31 ?type. "
             strsparqlquery += "OPTIONAL { ?item wdt:P345 ?imdbID. } "
             strsparqlquery += "OPTIONAL { ?item wdt:P4947 ?tmdbID. } "
@@ -434,6 +445,7 @@ def f_sparqlmoviescrawl(strwikidataidquery,lngyearquery=0):
 
 def f_sparqlseriescrawl(strwikidataidquery,lngyearquery=0):
     global strwikidatauseragent
+    global strsparqlserieinstanceof
     
     strwikidataidprev = ""
     intencore = True
@@ -455,7 +467,11 @@ def f_sparqlseriescrawl(strwikidataidquery,lngyearquery=0):
             strsparqlquery += "OPTIONAL { ?item wdt:P462 ?color. } "
             strsparqlquery += "?item wdt:P580 ?pubdate. "
         else:
-            strsparqlquery += "VALUES ?type { wd:Q5398426 wd:Q1259759 wd:Q117467246 wd:Q63952888 wd:Q15416 } "
+            arrserieinstanceof = [s.strip() for s in strsparqlserieinstanceof.split() if s.strip()]
+            strserieinstanceofwd = " ".join([f"wd:{s}" for s in arrserieinstanceof])
+            if strserieinstanceofwd == "":
+                strserieinstanceofwd = "wd:Q5398426"
+            strsparqlquery += "VALUES ?type { " + strserieinstanceofwd + " } "
             strsparqlquery += "?item wdt:P31 ?type. "
             strsparqlquery += "OPTIONAL { ?item wdt:P345 ?imdbID. } "
             strsparqlquery += "OPTIONAL { ?item wdt:P4947 ?tmdbID. } "
@@ -741,12 +757,27 @@ try:
             cp.f_setservervariable("strsparqlaltcrawlertotalruntime",strtotalruntime,strtotalruntimedesc,0)
             # Request Homer
             #f_sparqlpersonscrawl("Q6691",0)
+            # Retrieving instance of values for persons (humans) used in Wikidata Sparql queries
+            strsparqlpersoninstanceof = cp.f_getservervariable("strsparqlaltcrawlerpersoninstanceof",0)
+            if strsparqlpersoninstanceof == "":
+                strsparqlpersoninstanceof = "Q5"
+                cp.f_setservervariable("strsparqlaltcrawlerpersoninstanceof",strsparqlpersoninstanceof,"Instances of values for persons (humans) used in Wikidata Sparql queries",0)
+            # Retrieving instance of values for movies used in Wikidata Sparql queries
+            strsparqlmovieinstanceof = cp.f_getservervariable("strsparqlaltcrawlermovieinstanceof",0)
+            if strsparqlmovieinstanceof == "":
+                strsparqlmovieinstanceof = "Q11424 Q202866 Q226730 Q24862 Q20650540 Q506240 Q17517379"
+                cp.f_setservervariable("strsparqlaltcrawlermovieinstanceof",strsparqlmovieinstanceof,"Instances of values for movies used in Wikidata Sparql queries",0)
+            # Retrieving instance of values for series used in Wikidata Sparql queries
+            strsparqlserieinstanceof = cp.f_getservervariable("strsparqlaltcrawlerserieinstanceof",0)
+            if strsparqlserieinstanceof == "":
+                strsparqlserieinstanceof = "Q5398426 Q1259759 Q117467246 Q63952888 Q15416"
+                cp.f_setservervariable("strsparqlaltcrawlerserieinstanceof",strsparqlserieinstanceof,"Instances of values for series used in Wikidata Sparql queries",0)
             #arrwikidatascope = {101: 'movie', 102: 'person'}
             arrwikidatascope = {103: 'item to person', 104: 'item to movie', 106: 'item to serie', 102: 'person', 101: 'movie', 105: 'serie'}
             #arrwikidatascope = {104: 'item to movie'}
             #arrwikidatascope = {103: 'item to person'}
             #arrwikidatascope = {105: 'serie'}
-            arrwikidatascope = {106: 'item to serie'}
+            #arrwikidatascope = {106: 'item to serie'}
             for intindex,strcontent in arrwikidatascope.items():
                 strcurrentprocess = f"{intindex}: processing Wikidata " + strcontent + " data using SPARQL"
                 strprocessesexecuted += str(intindex) + ", "
@@ -795,10 +826,14 @@ try:
                     strsql = ""
                     strsql += "SELECT DISTINCT ID_WIKIDATA "
                     strsql += "FROM T_WC_WIKIDATA_ITEM "
-                    strsql += "WHERE INSTANCE_OF = 'Q5' "
-                    strsql += "AND ID_WIKIDATA NOT IN ( "
-                    strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_PERSON "
-                    strsql += ") "
+                    arrpersoninstanceof = [s.strip() for s in strsparqlpersoninstanceof.split() if s.strip()]
+                    strpersoninstanceofsql = ", ".join([f"'{s}'" for s in arrpersoninstanceof])
+                    if strpersoninstanceofsql == "":
+                        strpersoninstanceofsql = "'0'"
+                    strsql += "WHERE INSTANCE_OF IN (" + strpersoninstanceofsql + ") "
+                    #strsql += "AND ID_WIKIDATA NOT IN ( "
+                    #strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_PERSON "
+                    #strsql += ") "
                     strsql += "ORDER BY ID_WIKIDATA "
                     # strsql += "LIMIT 1 "
                     if strsql != "":
@@ -815,15 +850,24 @@ try:
                             # Retrieve the person for the given wikidata id 
                             print("strwikidataid = " + strwikidataid)
                             f_sparqlpersonscrawl(strwikidataid,0)
+                            # Now delete this ID_WIKIDATA in T_WC_WIKIDATA_ITEM
+                            strsqldelete = ""
+                            strsqldelete += "DELETE FROM T_WC_WIKIDATA_ITEM "
+                            strsqldelete += "WHERE ID_WIKIDATA = '" + strwikidataid + "' "
+                            cursor3.execute(strsqldelete)
                 elif intindex == 104:
                     # Items to movies data download
                     strsql = ""
                     strsql += "SELECT DISTINCT ID_WIKIDATA "
                     strsql += "FROM T_WC_WIKIDATA_ITEM "
-                    strsql += "WHERE INSTANCE_OF IN ('Q11424', 'Q17517379', 'Q202866', 'Q20650540', 'Q226730', 'Q24862', 'Q506240') "
-                    strsql += "AND ID_WIKIDATA NOT IN ( "
-                    strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_MOVIE "
-                    strsql += ") "
+                    arrmovieinstanceof = [s.strip() for s in strsparqlmovieinstanceof.split() if s.strip()]
+                    strmovieinstanceofsql = ", ".join([f"'{s}'" for s in arrmovieinstanceof])
+                    if strmovieinstanceofsql == "":
+                        strmovieinstanceofsql = "'0'"
+                    strsql += "WHERE INSTANCE_OF IN (" + strmovieinstanceofsql + ") "
+                    #strsql += "AND ID_WIKIDATA NOT IN ( "
+                    #strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_MOVIE "
+                    #strsql += ") "
                     strsql += "ORDER BY ID_WIKIDATA "
                     # strsql += "LIMIT 1 "
                     if strsql != "":
@@ -840,15 +884,24 @@ try:
                             # Retrieve the person for the given wikidata id 
                             print("strwikidataid = " + strwikidataid)
                             f_sparqlmoviescrawl(strwikidataid,0)
+                            # Now delete this ID_WIKIDATA in T_WC_WIKIDATA_ITEM
+                            strsqldelete = ""
+                            strsqldelete += "DELETE FROM T_WC_WIKIDATA_ITEM "
+                            strsqldelete += "WHERE ID_WIKIDATA = '" + strwikidataid + "' "
+                            cursor3.execute(strsqldelete)
                 elif intindex == 106:
                     # Items to series data download
                     strsql = ""
                     strsql += "SELECT DISTINCT ID_WIKIDATA "
                     strsql += "FROM T_WC_WIKIDATA_ITEM "
-                    strsql += "WHERE INSTANCE_OF IN ('Q5398426', 'Q1259759', 'Q117467246', 'Q63952888', 'Q15416') "
-                    strsql += "AND ID_WIKIDATA NOT IN ( "
-                    strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_SERIE "
-                    strsql += ") "
+                    arrserieinstanceof = [s.strip() for s in strsparqlserieinstanceof.split() if s.strip()]
+                    strserieinstanceofsql = ", ".join([f"'{s}'" for s in arrserieinstanceof])
+                    if strserieinstanceofsql == "":
+                        strserieinstanceofsql = "'0'"
+                    strsql += "WHERE INSTANCE_OF IN (" + strserieinstanceofsql + ") "
+                    #strsql += "AND ID_WIKIDATA NOT IN ( "
+                    #strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_SERIE "
+                    #strsql += ") "
                     strsql += "ORDER BY ID_WIKIDATA "
                     # strsql += "LIMIT 1 "
                     if strsql != "":
@@ -865,6 +918,11 @@ try:
                             # Retrieve the person for the given wikidata id 
                             print("strwikidataid = " + strwikidataid)
                             f_sparqlseriescrawl(strwikidataid,0)
+                            # Now delete this ID_WIKIDATA in T_WC_WIKIDATA_ITEM
+                            strsqldelete = ""
+                            strsqldelete += "DELETE FROM T_WC_WIKIDATA_ITEM "
+                            strsqldelete += "WHERE ID_WIKIDATA = '" + strwikidataid + "' "
+                            cursor3.execute(strsqldelete)
                 elif intindex == 105:
                     # Series data download
                     lngoffset = -1
