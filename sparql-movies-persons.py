@@ -155,7 +155,7 @@ def f_sparqlpersonscrawl(strwikidataidquery,lngyearquery=0):
                         arrpersoncouples["DEATHDAY"] = strdeathdatesql
                         print("arrpersoncouples[\"DEATHDAY\"] = ",strdeathdatesql)
                     arrpersoncouples["INSTANCE_OF"] = strinstanceofid
-                    strsqltablename = "T_WC_WIKIDATA_PERSON"
+                    strsqltablename = "T_WC_WIKIDATA_PERSON_V1"
                     strsqlupdatecondition = f"ID_WIKIDATA = '{strwikidataid}'"
                     cp.f_sqlupdatearray(strsqltablename,arrpersoncouples,strsqlupdatecondition,1)
             intencore = False
@@ -403,7 +403,7 @@ def f_sparqlmoviescrawl(strwikidataidquery,lngyearquery=0):
                     arrmoviecouples["ID_CRITERION_SPINE"] = lngcriterionspine
                     arrmoviecouples["INSTANCE_OF"] = strinstanceofid
                     
-                    strsqltablename = "T_WC_WIKIDATA_MOVIE"
+                    strsqltablename = "T_WC_WIKIDATA_MOVIE_V1"
                     strsqlupdatecondition = f"ID_WIKIDATA = '{strwikidataid}'"
                     cp.f_sqlupdatearray(strsqltablename,arrmoviecouples,strsqlupdatecondition,1)
                 # End of the loop for the current query so we process the last movie
@@ -696,7 +696,7 @@ def f_sparqlseriescrawl(strwikidataidquery,lngyearquery=0):
                     arrseriecouples["ID_CRITERION_SPINE"] = lngcriterionspine
                     arrseriecouples["INSTANCE_OF"] = strinstanceofid
                     
-                    strsqltablename = "T_WC_WIKIDATA_SERIE"
+                    strsqltablename = "T_WC_WIKIDATA_SERIE_V1"
                     strsqlupdatecondition = f"ID_WIKIDATA = '{strwikidataid}'"
                     cp.f_sqlupdatearray(strsqltablename,arrseriecouples,strsqlupdatecondition,1)
                 # End of the loop for the current query so we process the last serie
@@ -825,14 +825,14 @@ try:
                     # Items to persons data download
                     strsql = ""
                     strsql += "SELECT DISTINCT ID_WIKIDATA "
-                    strsql += "FROM T_WC_WIKIDATA_ITEM "
+                    strsql += "FROM T_WC_WIKIDATA_ITEM_V1 "
                     arrpersoninstanceof = [s.strip() for s in strsparqlpersoninstanceof.split() if s.strip()]
                     strpersoninstanceofsql = ", ".join([f"'{s}'" for s in arrpersoninstanceof])
                     if strpersoninstanceofsql == "":
                         strpersoninstanceofsql = "'0'"
                     strsql += "WHERE INSTANCE_OF IN (" + strpersoninstanceofsql + ") "
                     #strsql += "AND ID_WIKIDATA NOT IN ( "
-                    #strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_PERSON "
+                    #strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_PERSON_V1 "
                     #strsql += ") "
                     strsql += "ORDER BY ID_WIKIDATA "
                     # strsql += "LIMIT 1 "
@@ -850,23 +850,23 @@ try:
                             # Retrieve the person for the given wikidata id 
                             print("strwikidataid = " + strwikidataid)
                             f_sparqlpersonscrawl(strwikidataid,0)
-                            # Now delete this ID_WIKIDATA in T_WC_WIKIDATA_ITEM
+                            # Now delete this ID_WIKIDATA in T_WC_WIKIDATA_ITEM_V1
                             strsqldelete = ""
-                            strsqldelete += "DELETE FROM T_WC_WIKIDATA_ITEM "
+                            strsqldelete += "DELETE FROM T_WC_WIKIDATA_ITEM_V1 "
                             strsqldelete += "WHERE ID_WIKIDATA = '" + strwikidataid + "' "
                             cursor3.execute(strsqldelete)
                 elif intindex == 104:
                     # Items to movies data download
                     strsql = ""
                     strsql += "SELECT DISTINCT ID_WIKIDATA "
-                    strsql += "FROM T_WC_WIKIDATA_ITEM "
+                    strsql += "FROM T_WC_WIKIDATA_ITEM_V1 "
                     arrmovieinstanceof = [s.strip() for s in strsparqlmovieinstanceof.split() if s.strip()]
                     strmovieinstanceofsql = ", ".join([f"'{s}'" for s in arrmovieinstanceof])
                     if strmovieinstanceofsql == "":
                         strmovieinstanceofsql = "'0'"
                     strsql += "WHERE INSTANCE_OF IN (" + strmovieinstanceofsql + ") "
                     #strsql += "AND ID_WIKIDATA NOT IN ( "
-                    #strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_MOVIE "
+                    #strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_MOVIE_V1 "
                     #strsql += ") "
                     strsql += "ORDER BY ID_WIKIDATA "
                     # strsql += "LIMIT 1 "
@@ -884,23 +884,23 @@ try:
                             # Retrieve the person for the given wikidata id 
                             print("strwikidataid = " + strwikidataid)
                             f_sparqlmoviescrawl(strwikidataid,0)
-                            # Now delete this ID_WIKIDATA in T_WC_WIKIDATA_ITEM
+                            # Now delete this ID_WIKIDATA in T_WC_WIKIDATA_ITEM_V1
                             strsqldelete = ""
-                            strsqldelete += "DELETE FROM T_WC_WIKIDATA_ITEM "
+                            strsqldelete += "DELETE FROM T_WC_WIKIDATA_ITEM_V1 "
                             strsqldelete += "WHERE ID_WIKIDATA = '" + strwikidataid + "' "
                             cursor3.execute(strsqldelete)
                 elif intindex == 106:
                     # Items to series data download
                     strsql = ""
                     strsql += "SELECT DISTINCT ID_WIKIDATA "
-                    strsql += "FROM T_WC_WIKIDATA_ITEM "
+                    strsql += "FROM T_WC_WIKIDATA_ITEM_V1 "
                     arrserieinstanceof = [s.strip() for s in strsparqlserieinstanceof.split() if s.strip()]
                     strserieinstanceofsql = ", ".join([f"'{s}'" for s in arrserieinstanceof])
                     if strserieinstanceofsql == "":
                         strserieinstanceofsql = "'0'"
                     strsql += "WHERE INSTANCE_OF IN (" + strserieinstanceofsql + ") "
                     #strsql += "AND ID_WIKIDATA NOT IN ( "
-                    #strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_SERIE "
+                    #strsql += "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_SERIE_V1 "
                     #strsql += ") "
                     strsql += "ORDER BY ID_WIKIDATA "
                     # strsql += "LIMIT 1 "
@@ -918,9 +918,9 @@ try:
                             # Retrieve the person for the given wikidata id 
                             print("strwikidataid = " + strwikidataid)
                             f_sparqlseriescrawl(strwikidataid,0)
-                            # Now delete this ID_WIKIDATA in T_WC_WIKIDATA_ITEM
+                            # Now delete this ID_WIKIDATA in T_WC_WIKIDATA_ITEM_V1
                             strsqldelete = ""
-                            strsqldelete += "DELETE FROM T_WC_WIKIDATA_ITEM "
+                            strsqldelete += "DELETE FROM T_WC_WIKIDATA_ITEM_V1 "
                             strsqldelete += "WHERE ID_WIKIDATA = '" + strwikidataid + "' "
                             cursor3.execute(strsqldelete)
                 elif intindex == 105:
