@@ -1,2 +1,2 @@
-mv sparql-movies-persons-old.sh sparql-movies-persons.sh 
+mv sparql-movies-persons-off.sh sparql-movies-persons.sh 
 
