@@ -743,9 +743,10 @@ strprocessesexecuted = ""
 cp.f_setservervariable("strsparqlaltcrawlerprocessesexecuted",strprocessesexecuted,strprocessesexecuteddesc,0)
 
 try:
-    with cp.connectioncp:
-        with cp.connectioncp.cursor() as cursor:
-            cursor3 = cp.connectioncp.cursor()
+    conn = cp.f_getconnection()
+    with conn:
+        with conn.cursor() as cursor:
+            cursor3 = conn.cursor()
             # Start timing the script execution
             start_time = time.time()
             strnow = datetime.now(cp.paris_tz).strftime("%Y-%m-%d %H:%M:%S")
@@ -753,7 +754,7 @@ try:
             strtotalruntimedesc = "Total runtime of the Wikidata SPARQL crawler for movies, series and persons"
             strtotalruntimeprevious = cp.f_getservervariable("strsparqlaltcrawlermoviespersonstotalruntime",0)
             cp.f_setservervariable("strsparqlaltcrawlertotalruntimeprevious",strtotalruntimeprevious,strtotalruntimedesc + " (previous execution)",0)
-            strtotalruntime = ""
+            strtotalruntime = "RUNNING"
             cp.f_setservervariable("strsparqlaltcrawlertotalruntime",strtotalruntime,strtotalruntimedesc,0)
             # Request Homer
             #f_sparqlpersonscrawl("Q6691",0)
@@ -958,5 +959,6 @@ try:
     print("Process completed")
 except pymysql.MySQLError as e:
     print(f"❌ MySQL Error: {e}")
-    cp.connectioncp.rollback()
-
+    conn = getattr(cp, "connectioncp", None)
+    if conn is not None and getattr(conn, "open", False):
+        conn.rollback()
