@@ -7,7 +7,9 @@ else
     # Start the sparql-movies-persons container if it is not running
     cd /home/debian/docker/sparql-movies-persons
     docker build -t sparql-movies-persons-python-app .
-    # docker run -it --rm --network="host" --name sparql-movies-persons sparql-movies-persons-python-app
-    docker run -d --rm --network="host" --name sparql-movies-persons sparql-movies-persons-python-app
+    # Secrets are passed via --env-file at runtime; they are NOT baked into the image (see .dockerignore).
+    # The env file lives outside the app source tree to avoid being picked up by any future COPY.
+    # docker run -it --rm --network="host" --env-file /home/debian/docker/sparql-movies-persons/.env --name sparql-movies-persons sparql-movies-persons-python-app
+    docker run -d --rm --network="host" --env-file /home/debian/docker/sparql-movies-persons/.env --name sparql-movies-persons sparql-movies-persons-python-app
     echo "sparql-movies-persons Docker container started."
 fi
