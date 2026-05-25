@@ -1,2 +1,4 @@
 citizenphilsecrets.py
 .env
+.claude/
+__pycache__/

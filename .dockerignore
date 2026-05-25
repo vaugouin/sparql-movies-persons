@@ -1,0 +1,16 @@
+# Secrets — NEVER bake into image layers. Pass at runtime via `docker run --env-file <path>`.
+.env
+.env.*
+citizenphilsecrets.py
+
+# VCS metadata (build-context noise, not used at runtime)
+.git
+.gitignore
+
+# Python bytecode caches
+__pycache__
+*.pyc
+*.pyo
+
+# Editor / AI tooling state
+.claude
