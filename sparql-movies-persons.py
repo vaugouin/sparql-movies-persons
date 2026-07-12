@@ -531,7 +531,10 @@ def f_sparqlseriescrawl(strwikidataidquery,lngyearquery=0):
             strsparqlquery += "OPTIONAL { ?item wdt:P9584 ?criterionFilmID. } "
             strsparqlquery += "OPTIONAL { ?item wdt:P12279 ?criterionSpine. } "
             strsparqlquery += "OPTIONAL { ?item wdt:P462 ?color. } "
-            strsparqlquery += "?item wdt:P580 ?pubdate. "
+            # P580 is OPTIONAL in the id-batch path (not a required join): series with no
+            # start date must still be returned so they can be written to SERIE_V1 instead
+            # of being silently dropped from ITEM_V1 (e.g. Q100200874).
+            strsparqlquery += "OPTIONAL { ?item wdt:P580 ?pubdate. } "
         else:
             arrserieinstanceof = [s.strip() for s in strsparqlserieinstanceof.split() if s.strip()]
             strserieinstanceofwd = " ".join([f"wd:{s}" for s in arrserieinstanceof])
@@ -1677,11 +1680,19 @@ try:
                             # Retrieve all series for this batch in a single SPARQL call
                             print(f"batch {lngi // lngbatchsize + 1}: {strbatchlabel}")
                             f_sparqlseriescrawl(strbatchids,0)
-                            # Drop the whole batch from T_WC_WIKIDATA_ITEM_V1 — ids with no SPARQL result
-                            # are still considered processed (matches prior single-id behaviour)
+                            # Delete from ITEM_V1 only the ids that actually landed in SERIE_V1.
+                            # Series with no result (e.g. no P580 start date) stay in ITEM_V1 for a
+                            # later run instead of being silently dropped. Same shared connection, so
+                            # the rows committed by f_sqlupdatearray are visible to this SELECT.
                             strbatchsqllist = ",".join([f"'{x}'" for x in arrbatch])
-                            strsqldelete = "DELETE FROM T_WC_WIKIDATA_ITEM_V1 WHERE ID_WIKIDATA IN (" + strbatchsqllist + ")"
-                            cursor3.execute(strsqldelete)
+                            strsqlwritten = "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_SERIE_V1 WHERE ID_WIKIDATA IN (" + strbatchsqllist + ")"
+                            cursor3.execute(strsqlwritten)
+                            arrwritten = [row3['ID_WIKIDATA'] for row3 in cursor3.fetchall()]
+                            if arrwritten:
+                                strwrittensqllist = ",".join([f"'{x}'" for x in arrwritten])
+                                strsqldelete = "DELETE FROM T_WC_WIKIDATA_ITEM_V1 WHERE ID_WIKIDATA IN (" + strwrittensqllist + ")"
+                                cursor3.execute(strsqldelete)
+                                conn.commit()
                 elif intindex == 109:
                     # Items to seasons data download
                     strsql = ""
@@ -1710,9 +1721,17 @@ try:
                             time.sleep(2)
                             print(f"batch {lngi // lngbatchsize + 1}: {strbatchlabel}")
                             f_sparqlseasonscrawl(strbatchids,0)
+                            # Delete from ITEM_V1 only the ids that actually landed in SEASON_V1,
+                            # so seasons with no result stay for a later run instead of being dropped.
                             strbatchsqllist = ",".join([f"'{x}'" for x in arrbatch])
-                            strsqldelete = "DELETE FROM T_WC_WIKIDATA_ITEM_V1 WHERE ID_WIKIDATA IN (" + strbatchsqllist + ")"
-                            cursor3.execute(strsqldelete)
+                            strsqlwritten = "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_SEASON_V1 WHERE ID_WIKIDATA IN (" + strbatchsqllist + ")"
+                            cursor3.execute(strsqlwritten)
+                            arrwritten = [row3['ID_WIKIDATA'] for row3 in cursor3.fetchall()]
+                            if arrwritten:
+                                strwrittensqllist = ",".join([f"'{x}'" for x in arrwritten])
+                                strsqldelete = "DELETE FROM T_WC_WIKIDATA_ITEM_V1 WHERE ID_WIKIDATA IN (" + strwrittensqllist + ")"
+                                cursor3.execute(strsqldelete)
+                                conn.commit()
                 elif intindex == 110:
                     # Items to episodes data download
                     strsql = ""
@@ -1741,9 +1760,17 @@ try:
                             time.sleep(2)
                             print(f"batch {lngi // lngbatchsize + 1}: {strbatchlabel}")
                             f_sparqlepisodescrawl(strbatchids,0)
+                            # Delete from ITEM_V1 only the ids that actually landed in EPISODE_V1,
+                            # so episodes with no result stay for a later run instead of being dropped.
                             strbatchsqllist = ",".join([f"'{x}'" for x in arrbatch])
-                            strsqldelete = "DELETE FROM T_WC_WIKIDATA_ITEM_V1 WHERE ID_WIKIDATA IN (" + strbatchsqllist + ")"
-                            cursor3.execute(strsqldelete)
+                            strsqlwritten = "SELECT ID_WIKIDATA FROM T_WC_WIKIDATA_EPISODE_V1 WHERE ID_WIKIDATA IN (" + strbatchsqllist + ")"
+                            cursor3.execute(strsqlwritten)
+                            arrwritten = [row3['ID_WIKIDATA'] for row3 in cursor3.fetchall()]
+                            if arrwritten:
+                                strwrittensqllist = ",".join([f"'{x}'" for x in arrwritten])
+                                strsqldelete = "DELETE FROM T_WC_WIKIDATA_ITEM_V1 WHERE ID_WIKIDATA IN (" + strwrittensqllist + ")"
+                                cursor3.execute(strsqldelete)
+                                conn.commit()
                 elif intindex == 107:
                     # Items to characters data download
                     strsql = ""

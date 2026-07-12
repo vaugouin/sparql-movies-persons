@@ -2,3 +2,6 @@ citizenphilsecrets.py
 .env
 .claude/
 __pycache__/
+
+# Claude Code / agent local tooling
+.agents/
