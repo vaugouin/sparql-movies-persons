@@ -185,4 +185,4 @@ The project uses legacy Hungarian-prefixed variables (`str`, `lng`, `dbl`, `arr`
 
 ## License
 
-Internal Citizen Phil project — see repository owner for licensing terms.
+MIT, see [LICENSE](LICENSE).
