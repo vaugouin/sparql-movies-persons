@@ -92,8 +92,8 @@ Built and run as a Docker container via the repo's `Dockerfile` (base `python:3.
 
 ---
 
-**Last Updated**: 2026-10-17
-**Current Version**: 1.0.2
+**Last Updated**: 2026-10-25
+**Current Version**: 1.0.3
 
 ## Backlog (Nestor second-brain)
 

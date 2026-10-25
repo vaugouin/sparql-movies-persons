@@ -50,7 +50,7 @@ The crawler is the "alternative" SPARQL-based pipeline that complements the main
 | [Dockerfile](Dockerfile) | Slim Python 3.10 image that installs the requirements and runs the crawler. |
 | [.dockerignore](.dockerignore) | Excludes `.env`, `citizenphilsecrets.py`, `.git/`, `__pycache__/`, and editor state from the build context so secrets and noise cannot end up in image layers. |
 | [sparql-movies-persons.sh](sparql-movies-persons.sh) | Host-side launcher: builds the image and starts the container detached on the host network. |
-| [on.sh](on.sh) / [off.sh](off.sh) | Toggle scripts that rename the launcher between an "on" and "off" filename — used by an external cron / supervisor to enable or disable the scheduled run. |
+| [on.sh](on.sh) / [off.sh](off.sh) | Toggle scripts: `off.sh` writes the flag file `CRON_OFF`, which makes the launcher exit at once, `on.sh` deletes it; they enable or disable the scheduled run. |
 | [AGENTS.md](AGENTS.md) | Coding conventions and agent guide (Hungarian notation, SQL naming, function prefixes). |
 | [doc/sql/](doc/sql/) | Reference DDL — `Wikidata-tables.sql` for the Wikidata tables, `T_WC_SERVER_VARIABLE.sql` for the server-variable table. |
 
@@ -163,7 +163,7 @@ Or use [sparql-movies-persons.sh](sparql-movies-persons.sh) on the host (this is
 1. Checks whether a container named `sparql-movies-persons` is already running and exits if so;
 2. Otherwise rebuilds the image from `/home/debian/docker/sparql-movies-persons` and starts it detached with `--network=host`, `--rm`, and `--env-file /home/debian/docker/sparql-movies-persons/.env`. The env file is read by Docker at container start and the values become environment variables inside the container only — they are not persisted in the image.
 
-`on.sh` / `off.sh` are a deliberately minimal toggle: cron is configured to look for `sparql-movies-persons.sh`, and renaming the file in or out of that name pauses the cycle without touching the crontab itself.
+`on.sh` / `off.sh` are a deliberately minimal toggle: cron calls `sparql-movies-persons.sh`, which exits at once while the flag file `CRON_OFF` that `off.sh` writes exists, so the cycle pauses without touching the crontab itself (until 2026-10-25 the pair renamed the launcher).
 
 ---
 
