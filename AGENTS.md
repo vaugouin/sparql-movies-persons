@@ -1,108 +1,41 @@
 # AGENTS.md - Agent Guide for Sparql Alt Crawler
 
-This file gives you the agentic context you need to work on this codebase safely. For project overview, features, install / deploy steps and human-facing security / performance / troubleshooting material, read @README.md — that file is canonical and not duplicated here.
+Rules and traps for agents. Project overview, scopes, configuration, server variables, database destinations, Docker build and run, operational notes: @README.md (canonical). Reference DDL: `doc/sql/*.sql` (`Wikidata-tables.sql`, `T_WC_SERVER_VARIABLE.sql`), read-only unless the user asks for schema-doc edits; do not duplicate table definitions elsewhere.
 
-This is the single canonical guide for autonomous coding agents in this repository. Assistant-specific files such as @CLAUDE.md, and any future tool-specific guide such as `GEMINI.md`, should only point here and should not duplicate repository instructions.
-
-Deeper specs live in their own files:
-- @doc/sql/*.sql — reference DDL for the database schema; treat these files as read-only unless the user explicitly asks you to edit schema documentation
-
-- For any project update, keep documentation aligned:
-  - Update `README.md` for user-facing behavior, configuration, setup, deployment, troubleshooting, or verification changes.
-  - Update this file only when agent workflow or safety context changes.
+Update `README.md` for user-facing behavior, configuration or deployment changes; update this file only when agent workflow or safety context changes.
 
 ---
 
 ## Related repositories (project ecosystem)
 
-`sparql-movies-persons` is one stage of **Agent BBB**, a multi-repository movie/TV database system owned by GitHub user `vaugouin`. All sibling repos live under `%USERPROFILE%/Code/<repo>` and at `github.com/vaugouin/<repo>`; they are interdependent stages of one pipeline that converges on a shared MySQL/MariaDB database (`T_WC_*` tables) and a ChromaDB vector store. The canonical roster of sibling repositories is kept in `%USERPROFILE%/Nestor/projets/t2s-backlog/topics/related-repositories.txt` (documentation repo `Nestor`, outside `Code/`).
+One stage of **Agent BBB** (GitHub `vaugouin`; siblings at `%USERPROFILE%/Code/<repo>` and `github.com/vaugouin/<repo>`, converging on a shared MariaDB with `T_WC_*` tables). Canonical roster and stage map: `%USERPROFILE%/Nestor/projets/t2s-backlog/topics/related-repositories.txt`.
 
-Pipeline stages:
-- **Infrastructure** — `chromadb` (vector service), `reverseproxy` (NGINX TLS ingress), `chromadb-security-test` (firewall validation), `tools` (host-side operational scripts for the shared MariaDB: backups per perimeter, one-off `.sql` runs; **private repo**, it documents where the database lives and how it is restored).
-- **Acquisition** — `tmdb-crawler`, `imdb-crawler`, `sparql-crawler`, `sparql-movies-persons`, `wikidata-crawler`, `wikipedia-crawler`, `selenium-tmdb`, `download-images`, `sqlite-plex-to-tmdb`, `movieparadise`, `open-credits` (crowdsourced OCR of on-screen credits into `T_WC_OC_*`).
-- **Preprocessing → `T_WC_T2S_*`** — `tmdb-movie-preprocess`, `tmdb-person-preprocess`, `keywords-processing`.
-- **Semantic index & name resolution** — `embedding-update`, `embedding-query`, `rapidfuzz_query`.
-- **Serving** — `fastapi-text2sql` (NL→SQL API + MCP server), `voice-agent`, `tmdb-front` (PHP web front-end).
-- **Evaluation** — `text2sql-eval`, `extract-movie-questions`.
-- **Maintenance & tooling** — `plex-duplicates`, `subtitle-translate`, `powershell`, `playwright-test`, `manual-refresh` (one-entity TMDb + Wikipedia refresh console, formerly `python`).
-- **Monitoring & observability** — `data-monitoring`, `pipeline-3d` (three.js replay of one question's execution trace through `voice-agent` and `fastapi-text2sql`).
-
-**This repository's role:** Acquisition stage (Wikidata link discovery). Runs SPARQL queries against the Wikidata Query Service to discover and link Wikidata QIDs to TMDb movies, series, and persons via IMDb/TMDb cross-reference properties. The links it establishes are then enriched by `sparql-crawler` / `wikidata-crawler` and consumed by `tmdb-movie-preprocess`.
+**This repository's role:** acquisition, Wikidata link discovery (V1). Queries the Wikidata Query Service to discover Wikidata QIDs and link them to TMDb movies, series and persons via IMDb/TMDb cross-reference properties, into the `T_WC_WIKIDATA_*_V1` tables. The links are enriched by `sparql-crawler` / `wikidata-crawler` and consumed by `tmdb-movie-preprocess`.
 
 ---
-
-## Where things live (file → role)
-
-Edit at the right layer; the architecture is intentionally split.
 
 ## Code conventions
 
-- **Hungarian notation** for variables (legacy style):
-  - `str` — strings (`strtablename`, `strapiversion`)
-  - `lng` — integers (`lngpage`, `lngrowsperpage`)
-  - `dbl` — floats (`dblavailableram`)
-  - `arr` — lists / arrays
-  - `int` — boolean-like flags (`intcleanupenabled`, `intentity`)
-- **Function naming**: public pipeline entry points use `f_` (`f_text2sql`, `f_entity_extraction`, `f_resolve_complex_question`, `f_answer_single_value`, `f_hello_world`); private helpers use `_` (`_call_chat_llm`, `_normalize_llm_model`).
-- **Docstrings**: Google-style on public functions.
-- **Error handling**: broad try/except with console logging; surface failures via the `error` response field and the `messages` trace. Database execution errors are not returned directly to clients — they go through the complex-question retry path when enabled.
-- **JSON serialization**: use `logs.decimal_serializer()` for `Decimal` and `datetime`.
-
----
-
-## Database Schema Sources
-
-Full DDL lives under [doc/sql/](doc/sql/); do not duplicate table definitions here. Treat these files as reference-only unless the user explicitly asks for schema-doc edits.
-
-- [doc/sql/Wikidata-tables.sql](doc/sql/Wikipedia-tables.sql) — Wikidata tables.
+- Legacy Hungarian notation: `str` strings, `lng` integers, `dbl` floats, `arr` lists/dicts, `int` boolean-like flags.
+- Public functions use the `f_` prefix, private helpers `_`; Google-style docstrings on shared helpers.
+- Write through `cp.f_sqlupdatearray` (idempotent upsert by `ID_WIKIDATA`) and record progress with `cp.f_setservervariable`, so a restart stays safe.
+- Do not shorten the sleeps between SPARQL requests without a documented reason: WDQS throttles aggressive clients, which cascades into the 60 s retry loop. Keep every SPARQL call on POST (a 500-id `VALUES` clause overflows the GET URI limit, HTTP 414).
+- Keep Markdown, JSON and SQL UTF-8: the data is multilingual and any encoding rewrite introduces mojibake.
 
 ---
 
 ## SQL Object Naming Conventions
 
-- SQL table and column names are uppercase snake case, except legacy imported TMDb genre columns such as `id` and `name`.
-- Persistent tables use `T_WC_*`.
-- Text2SQL read-model tables use `T_WC_T2S_*`.
-- TMDb source/reference tables use `T_WC_TMDB_*`.
-- Wikidata tables use `T_WC_WIKIDATA_*`; staging tables use `STG_T_WC_WIKIDATA_*`.
-- Wikipedia tables use `T_WC_WIKIPEDIA_*`.
-- Join tables usually follow `T_WC_T2S_{PARENT}_{CHILD}`, for example `T_WC_T2S_MOVIE_GENRE`, `T_WC_T2S_PERSON_MOVIE`.
-- Primary keys are usually `ID_{ENTITY}` for entity tables, `ID_ROW` for generic/join rows, or a table-specific surrogate such as `ID_T2S_PERSON_MOVIE`.
-- Foreign keys reuse the referenced primary-key name, for example `ID_MOVIE`, `ID_PERSON`, `ID_GENRE`.
-- Date columns use `DAT_*`; datetime/timestamp columns use `TIM_*`.
-- Boolean-like flags use `IS_*` or legacy integer flags such as `DELETED`.
-- Ordering uses `DISPLAY_ORDER`.
-- Aggregate counters use `*_COUNT`.
-- Media paths use `*_PATH`.
-- Language-specific labels/titles often use suffixes such as `_FR`; generic language rows use `LANG`.
-- RapidFuzz/generated search columns use `*_NORM` and `*_KEY`; popularity tie-breakers commonly use `POPULARITY`.
-- Index names are mixed legacy style. Preserve existing style: simple `KEY COLUMN_NAME`, `IDX_*` for indexes, `UK_*` for unique keys, `FK_*` for foreign keys, and `ft_*` for FULLTEXT indexes.
+- Uppercase snake case (except legacy TMDb genre columns `id`, `name`). Prefixes: `T_WC_*` persistent, `T_WC_T2S_*` Text2SQL read model, `T_WC_TMDB_*` TMDb, `T_WC_WIKIDATA_*` Wikidata (`STG_T_WC_WIKIDATA_*` staging), `T_WC_WIKIPEDIA_*` Wikipedia. Join tables `T_WC_T2S_{PARENT}_{CHILD}`.
+- Keys: `ID_{ENTITY}`, `ID_ROW` for generic/join rows, or a table-specific surrogate; foreign keys reuse the referenced key name.
+- Suffixes/prefixes: `DAT_*` dates, `TIM_*` timestamps, `IS_*` or legacy integer flags (`DELETED`), `DISPLAY_ORDER`, `*_COUNT`, `*_PATH`, `_FR` / `LANG` for languages, `*_NORM` / `*_KEY` for RapidFuzz columns.
+- Index names are mixed legacy style; preserve it: `KEY COLUMN_NAME`, `IDX_*`, `UK_*`, `FK_*`, `ft_*`.
 
 ---
 
-## Encoding
-
-Keep Markdown, prompt files, JSON config, and logs UTF-8. These files contain non-ASCII names and multilingual examples. Avoid editor or terminal operations that rewrite them with mojibake.
-
----
-
-## Build & deployment (Docker)
-
-Built and run as a Docker container via the repo's `Dockerfile` (base `python:3.10.5-slim-buster`). The image installs `requirements.txt`, copies the repo into `/app`, and runs the crawler as `CMD ["python", "./sparql-movies-persons.py"]` — a one-shot batch job, no exposed ports or volumes. Secrets stay out of the image: `.env` and `citizenphilsecrets.py` are excluded by `.dockerignore` and passed at runtime via `docker run --env-file`.
-
----
-
-**Last Updated**: 2026-10-25
-**Current Version**: 1.0.4
+**Last Updated**: 2026-10-31
+**Current Version**: 1.0.5
 
 ## Backlog (Nestor second-brain)
 
-The prioritized, agent-ready implementation backlog for this repo lives in the **Nestor**
-knowledge repo (a separate repo, not cloned alongside this one):
-
-- This repo: `C:\Users\vaugo\Nestor\projets\t2s-backlog\repos\sparql-movies-persons.md`
-- Cross-repo dashboard: `C:\Users\vaugo\Nestor\projets\t2s-backlog\index.md`
-
-Consult it before implementing: tasks are `SPARQL-MOVIES-PERSONS-NNN` with status (done / in-progress /
-todo), priority, and quick-wins. NOTE: these are local paths on Philippe's PC and do not
-resolve on the VPS or on cloud agents (claude.ai/code).
+Backlog for this repo: `C:\Users\vaugo\Nestor\projets\t2s-backlog\repos\sparql-movies-persons.md` (dashboard: `...\t2s-backlog\index.md`). Tasks are `SPARQL-MOVIES-PERSONS-NNN`; consult it before implementing. Local paths on Philippe's PC only, they do not resolve on the VPS or cloud agents.
