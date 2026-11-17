@@ -12,7 +12,7 @@ Update `README.md` for user-facing behavior, configuration or deployment changes
 
 ## Related repositories (project ecosystem)
 
-One stage of **Agent BBB** (GitHub `vaugouin`; siblings at `%USERPROFILE%/Code/<repo>` and `github.com/vaugouin/<repo>`, converging on a shared MariaDB with `T_WC_*` tables). Canonical roster and stage map: `%USERPROFILE%/Nestor/projets/t2s-backlog/topics/related-repositories.txt`.
+One stage of **Cinephile App** (GitHub `vaugouin`; siblings at `%USERPROFILE%/Code/<repo>` and `github.com/vaugouin/<repo>`, converging on a shared MariaDB with `T_WC_*` tables). Canonical roster and stage map: `%USERPROFILE%/Nestor/projets/t2s-backlog/topics/related-repositories.txt`.
 
 **This repository's role:** acquisition, Wikidata link discovery (V1). Queries the Wikidata Query Service to discover Wikidata QIDs and link them to TMDb movies, series and persons via IMDb/TMDb cross-reference properties, into the `T_WC_WIKIDATA_*_V1` tables. The links are enriched by `sparql-crawler` / `wikidata-crawler` and consumed by `tmdb-movie-preprocess`.
 
